@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{base :: layout(~{::main})}">
+<body>
+<main>
+<div class="container profile-container">
+    <!-- Profile Welcome Header -->
+    <div class="profile-header">
+        <div class="profile-title">
+            <h2 th:text="'Hello, ' + ${username} + '!'"></h2>
+            <p><i class="fa-solid fa-envelope"></i> Connected Gmail: <b th:text="${user_email}"></b></p>
+            <p><i class="fa-solid fa-user-shield"></i> Role: <span class="badge" style="background-color: var(--accent-light); color: var(--primary); text-transform: uppercase;" th:text="${user_role}"></span></p>
+        </div>
+        <div>
+            <a th:href="@{/menu}" class="btn btn-accent"><i class="fa-solid fa-mug-hot"></i> Order Coffee</a>
+        </div>
+    </div>
+
+    <!-- History Columns -->
+    <div class="profile-sections">
+        <!-- Table Reservations History Card -->
+        <div class="profile-card">
+            <h3><i class="fa-solid fa-chair" style="color: var(--accent);"></i> Booked Tables</h3>
+            <div class="history-list">
+                <th:block th:if="${not #lists.isEmpty(reservations)}">
+                    <div th:each="res : ${reservations}" class="history-item">
+                        <div class="history-item-header">
+                            <span th:text="'Booking ID: KC-RES-' + ${res.id}"></span>
+                            <span style="color: var(--accent);"><i class="fa-solid fa-check-double"></i> Confirmed</span>
+                        </div>
+                        <div style="margin: 0.5rem 0; color: var(--dark);">
+                            <p><i class="fa-solid fa-location-dot"></i> Branch: <b th:text="${res.location != null} ? ${res.location.name} : 'Kushwaha Cafe'"></b></p>
+                            <p><i class="fa-solid fa-calendar-day"></i> Date: <b th:text="${res.date}"></b></p>
+                            <p><i class="fa-solid fa-clock"></i> Time Slot: <b th:text="${res.slotIn} + ' to ' + ${res.slotOut}"></b></p>
+                            <p><i class="fa-solid fa-indian-rupee-sign"></i> Rate: <b th:text="'INR ' + ${#numbers.formatDecimal(res.hourlyRate, 1, 2)} + '/hr'"></b></p>
+                            <p><i class="fa-solid fa-money-bill-wave"></i> Total Charge: <b style="color: var(--accent);" th:text="'INR ' + ${#numbers.formatDecimal(res.totalCharge, 1, 2)}"></b></p>
+                            <p><i class="fa-solid fa-users"></i> Guests: <b th:text="${res.guests} + ' Persons'"></b></p>
+                            <p><i class="fa-solid fa-circle-info"></i> Status: 
+                                <span th:class="'badge ' + (${res.status == 'Active'} ? 'paid' : 'pending')" th:text="${res.status}"></span>
+                            </p>
+                        </div>
+                        <div th:if="${res.specialRequests != null && !res.specialRequests.isEmpty()}" style="font-size: 0.8rem; background-color: var(--light); padding: 0.4rem; border-radius: 4px; border: 1px dashed var(--cream-dark); margin-top: 0.5rem;">
+                            <b>Note:</b> <span th:text="${res.specialRequests}"></span>
+                        </div>
+                        <small style="color: var(--gray); display: block; margin-top: 0.5rem; text-align: right;" th:text="'Booked on: ' + ${#temporals.format(res.createdAt, 'yyyy-MM-dd')}"></small>
+                    </div>
+                </th:block>
+                <th:block th:if="${#lists.isEmpty(reservations)}">
+                    <div style="text-align: center; color: var(--gray); padding: 3rem 0;">
+                        <span style="font-size: 3rem; display: block;">🪑</span>
+                        No active table reservations.
+                        <a th:href="@{/reserve}" class="btn btn-sm btn-secondary" style="display: block; margin: 1rem auto; max-width: 200px;">Book a Table</a>
+                    </div>
+                </th:block>
+            </div>
+        </div>
+
+        <!-- Food Orders History Card -->
+        <div class="profile-card">
+            <h3><i class="fa-solid fa-receipt" style="color: var(--accent);"></i> Order History</h3>
+            <div class="history-list">
+                <th:block th:if="${not #lists.isEmpty(orders_data)}">
+                    <div th:each="data : ${orders_data}" th:class="'history-item ' + (${data.order.paymentStatus == 'Paid'} ? 'paid' : 'pending')">
+                        <div class="history-item-header">
+                            <span th:text="'Order ID: KC-ORD-' + ${data.order.id}"></span>
+                            <span th:class="'badge ' + (${data.order.paymentStatus == 'Paid'} ? 'paid' : 'pending')" th:text="${data.order.paymentStatus}"></span>
+                        </div>
+                        <div style="margin: 0.5rem 0;">
+                            <p style="font-weight: 600;" th:text="'Total Amount: INR ' + ${#numbers.formatDecimal(data.order.totalAmount, 1, 2)}"></p>
+                            <p style="font-size: 0.85rem; color: var(--gray);">Order Status: <span class="badge" style="background-color: var(--cream-dark); color: var(--primary);" th:text="${data.order.orderStatus}"></span></p>
+                            
+                            <div style="font-size: 0.85rem; margin-top: 0.5rem; color: var(--text-muted);">
+                                <b>Ordered Items:</b>
+                                <ul style="padding-left: 1.2rem; margin-top: 0.2rem;">
+                                    <li th:each="item : ${data.items_list}" th:text="${item.name} + ' x ' + ${item.quantity}"></li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; border-top: 1px dashed var(--cream-dark); padding-top: 0.5rem;">
+                            <small style="color: var(--gray);" th:text="'Date: ' + ${#temporals.format(data.order.createdAt, 'yyyy-MM-dd HH:mm')}"></small>
+                            <div>
+                                <th:block th:if="${data.order.paymentStatus == 'Pending'}">
+                                    <a th:href="@{/checkout(order_id=${data.order.id})}" class="btn btn-accent btn-sm" style="padding: 0.2rem 0.6rem; font-size: 0.8rem;"><i class="fa-solid fa-qrcode"></i> Pay Now</a>
+                                </th:block>
+                                <th:block th:unless="${data.order.paymentStatus == 'Pending'}">
+                                    <a th:href="@{/bill/{id}(id=${data.order.id})}" class="btn btn-secondary btn-sm" style="padding: 0.2rem 0.6rem; font-size: 0.8rem;"><i class="fa-solid fa-print"></i> View Bill</a>
+                                </th:block>
+                            </div>
+                        </div>
+                    </div>
+                </th:block>
+                <th:block th:if="${#lists.isEmpty(orders_data)}">
+                    <div style="text-align: center; color: var(--gray); padding: 3rem 0;">
+                        <span style="font-size: 3rem; display: block;">🍔</span>
+                        No orders placed yet.
+                        <a th:href="@{/menu}" class="btn btn-sm btn-secondary" style="display: block; margin: 1rem auto; max-width: 200px;">Browse Menu</a>
+                    </div>
+                </th:block>
+            </div>
+        </div>
+    </div>
+</div>
+</main>
+</body>
+</html>

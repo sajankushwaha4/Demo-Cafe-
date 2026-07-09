@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{base :: layout(~{::main})}">
+<body>
+<main>
+<div class="container">
+    <div class="checkout-container">
+        <h2><i class="fa-solid fa-credit-card" style="color: var(--accent);"></i> Secure Checkout</h2>
+        <p style="color: var(--gray); margin-bottom: 2rem;">Confirm your order details and choose your payment method below.</p>
+        
+        <!-- Order details -->
+        <div style="background-color: var(--cream); padding: 1.5rem; border-radius: 8px; border: 1px solid var(--cream-dark); margin-bottom: 2rem; text-align: left; max-width: 500px; margin-left: auto; margin-right: auto;">
+            <h4 style="font-family: 'Outfit', sans-serif; border-bottom: 1px dashed var(--cream-dark); padding-bottom: 0.5rem; margin-bottom: 1rem; color: var(--primary);">Order Invoice Summary</h4>
+            <p style="margin: 0.4rem 0;"><b>Order Reference:</b> <span th:text="'KC-ORD-' + ${order.id}"></span></p>
+            <p style="margin: 0.4rem 0;"><b>Customer Name:</b> <span th:text="${order.customerName}"></span></p>
+            <p style="margin: 0.4rem 0;"><b>Phone Number:</b> <span th:text="${order.customerPhone}"></span></p>
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--cream-dark); display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-weight: 700; font-size: 1.1rem;">Total Amount to Pay:</span>
+                <span style="font-size: 1.8rem; font-weight: 800; color: var(--accent);" th:text="'INR ' + ${#numbers.formatDecimal(order.totalAmount, 1, 2)}"></span>
+            </div>
+        </div>
+
+        <!-- UPI QR Scan and UTR Entry Card -->
+        <div class="qr-card" style="max-width: 400px; margin: 0 auto 2rem auto; padding: 2rem 1.5rem; text-align: center;">
+            <div style="font-weight: 700; text-transform: uppercase; color: var(--primary); font-size: 0.9rem; letter-spacing: 1px; margin-bottom: 1rem;">
+                Scan QR Code to Pay
+            </div>
+            
+            <!-- QR Code generated dynamically -->
+            <img th:src="'https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=10&data=' + ${#uris.escapePathSegment(upi_string)}" 
+                 alt="Scan QR to Pay" 
+                 style="display: block; margin: 0 auto 1.2rem auto; width: 220px; height: 220px; border: 4px solid white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);" />
+            
+            <div style="font-size: 0.95rem; margin-bottom: 0.5rem; color: var(--primary);">
+                UPI ID: <strong style="color: var(--accent);" th:text="${payee_upi}"></strong>
+            </div>
+            
+            <div style="font-size: 0.85rem; color: var(--gray); margin-bottom: 1.5rem; line-height: 1.4;">
+                Scan using any UPI app (Google Pay, PhonePe, Paytm, BHIM) and complete the payment of 
+                <strong style="color: var(--accent); font-weight: 700;" th:text="'₹' + ${#numbers.formatDecimal(order.totalAmount, 1, 2)}"></strong>.
+            </div>
+            
+            <!-- UTR Entry Form -->
+            <div style="border-top: 1px dashed var(--cream-dark); padding-top: 1.5rem; text-align: left;">
+                <label for="utr-input" style="display: block; font-weight: 600; font-size: 0.9rem; margin-bottom: 0.5rem; color: var(--primary);">
+                    Enter 12-Digit UPI Ref / UTR Number:
+                </label>
+                <input type="text" id="utr-input" placeholder="e.g. 412345678901" maxlength="12" 
+                       style="width: 100%; padding: 0.8rem; border-radius: 6px; border: 1px solid var(--cream-dark); font-size: 1.1rem; margin-bottom: 1.2rem; text-align: center; letter-spacing: 2px; font-family: monospace; background-color: white; color: var(--primary);" required />
+                
+                <button id="confirm-payment-btn" class="btn btn-accent" style="width: 100%; padding: 1rem; font-size: 1.1rem; display: flex; justify-content: center; align-items: center; gap: 0.5rem;">
+                    <i class="fa-solid fa-circle-check"></i> Submit & Confirm Order
+                </button>
+            </div>
+        </div>
+
+        <div style="margin-top: 1rem;">
+            <a th:href="@{/menu}" style="color: var(--gray); font-size: 0.9rem; text-decoration: underline;"><i class="fa-solid fa-arrow-left-long"></i> Cancel & Return to Menu</a>
+        </div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    document.addEventListener('DOMContentLoaded', () => {
+        const confirmBtn = document.getElementById('confirm-payment-btn');
+        const utrInput = document.getElementById('utr-input');
+        const orderId = /*[[${order.id}]]*/ 0;
+        
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', async () => {
+                const utrVal = utrInput.value.trim();
+                
+                if (utrVal.length !== 12 || !/^\d+$/.test(utrVal)) {
+                    alert('Please enter a valid 12-digit numeric UPI Ref/UTR number.');
+                    return;
+                }
+                
+                confirmBtn.disabled = true;
+                confirmBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verifying...';
+                
+                try {
+                    const response = await fetch('/api/orders/pay/' + orderId, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ utr_number: utrVal })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        confirmBtn.style.backgroundColor = "#10B981";
+                        confirmBtn.style.color = "white";
+                        confirmBtn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Payment Confirmed!';
+                        
+                        setTimeout(() => {
+                            window.location.href = '/bill/' + orderId;
+                        }, 1000);
+                    } else {
+                        alert(result.message || 'Payment verification failed. Please check the UTR and try again.');
+                        confirmBtn.disabled = false;
+                        confirmBtn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Submit & Confirm Order';
+                    }
+                } catch (error) {
+                    console.error('Payment error:', error);
+                    alert('Connection error. Please try again.');
+                    confirmBtn.disabled = false;
+                    confirmBtn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Submit & Confirm Order';
+                }
+            });
+        }
+    });
+</script>
+</main>
+</body>
+</html>

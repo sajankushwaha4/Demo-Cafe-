@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{base :: layout(~{::main})}">
+<body>
+<main>
+<div class="container">
+    <div class="auth-container">
+        <!-- Auth Sidebar info banner -->
+        <div class="auth-sidebar">
+            <h2>Taste & Coziness</h2>
+            <p>Join the Kushwaha Cafe community today. Log in to your account to place quick food orders, book tables in advance, and track your invoice bills online.</p>
+            <div style="font-size: 5rem; margin-top: 2rem; opacity: 0.9;">☕🥐🍰</div>
+        </div>
+        
+        <!-- Unified Passwordless Auth Form -->
+        <div class="auth-forms" style="padding: 3rem 2rem;">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.8rem; color: var(--primary); margin-bottom: 0.5rem;"><i class="fa-solid fa-shield-halved" style="color: var(--accent);"></i> Secure OTP Sign In</h3>
+                <p style="color: var(--gray); font-size: 0.9rem;">No password needed. Enter your name and Gmail to receive a secure login code.</p>
+            </div>
+            
+            <form th:action="@{/login/send-otp}" method="POST" class="auth-form active">
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label for="login-username"><i class="fa-solid fa-user"></i> Full Name / Username</label>
+                    <input type="text" id="login-username" name="username" placeholder="e.g. Deepak Singh" required>
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label for="login-email"><i class="fa-solid fa-envelope"></i> Gmail Address</label>
+                    <input type="email" id="login-email" name="email" placeholder="example@gmail.com" required>
+                    <small style="color: var(--gray); font-size: 0.75rem; display: block; margin-top: 0.3rem;">Verification OTP will be sent here.</small>
+                </div>
+                
+                <button type="submit" class="btn btn-accent" style="width: 100%; margin-top: 1rem; font-size: 1rem; padding: 0.9rem;"><i class="fa-solid fa-paper-plane"></i> Get Verification Code</button>
+            </form>
+        </div>
+    </div>
+</div>
+</main>
+</body>
+</html>
