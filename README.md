@@ -155,12 +155,6 @@ Contributions are welcome. Feel free to fork the repository and submit a pull re
 
 ---
 
-## 📄 License
-
-This project is created for educational and learning purposes.
-
----
-
 ## ⭐ Support
 
 If you found this project helpful, please give it a ⭐ on GitHub.
