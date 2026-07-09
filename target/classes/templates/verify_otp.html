@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{base :: layout(~{::main})}">
+<body>
+<main>
+<div class="container">
+    <div class="auth-container">
+        <!-- Auth Sidebar info banner -->
+        <div class="auth-sidebar">
+            <h2>Verify Identity</h2>
+            <p>We've sent a 6-digit verification code to your Gmail address. Enter it on the screen to confirm your identity and access your Kushwaha Cafe account.</p>
+            <div style="font-size: 5rem; margin-top: 2rem; opacity: 0.9;">🔑🛡️✉️</div>
+        </div>
+        
+        <!-- OTP Input Form -->
+        <div class="auth-forms" style="padding: 3rem 2rem;">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.8rem; color: var(--primary); margin-bottom: 0.5rem;"><i class="fa-solid fa-key" style="color: var(--accent);"></i> Enter OTP Code</h3>
+                <p style="color: var(--gray); font-size: 0.9rem;">Verification code has been sent to:</p>
+                <p style="font-weight: 700; color: var(--primary); font-size: 0.95rem; margin-top: 0.2rem;" th:text="${session.otp_email}"></p>
+            </div>
+            
+            <form th:action="@{/login/verify}" method="POST" class="auth-form active">
+                <div class="form-group" style="margin-bottom: 1.5rem; text-align: center;">
+                    <label for="verification-otp" style="text-align: left; display: block;"><i class="fa-solid fa-key"></i> 6-Digit OTP</label>
+                    <input type="text" id="verification-otp" name="otp" placeholder="e.g. 123456" maxlength="6" required style="text-align: center; font-size: 1.3rem; letter-spacing: 4px; padding: 0.8rem;" autocomplete="off">
+                    <small style="color: var(--gray); font-size: 0.75rem; display: block; margin-top: 0.3rem;">Code expires in 5 minutes.</small>
+                </div>
+                
+                <button type="submit" class="btn btn-accent" style="width: 100%; margin-top: 1rem; font-size: 1rem; padding: 0.9rem;"><i class="fa-solid fa-circle-check"></i> Verify & Login</button>
+                
+                <div style="text-align: center; margin-top: 1.5rem;">
+                    <a th:href="@{/login}" style="color: var(--gray); font-size: 0.85rem; text-decoration: underline;"><i class="fa-solid fa-arrow-left"></i> Change email / Go back</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</main>
+</body>
+</html>

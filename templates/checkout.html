@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kushwaha Cafe - UPI Checkout</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <!-- Premium Header / Navbar -->
+    <header>
+        <div class="container">
+            <a href="index.html" class="logo">
+                <i class="fa-solid fa-mug-hot"></i> Kushwaha<span>Cafe</span>
+            </a>
+
+            <ul class="nav-links">
+                <li><a href="index.html" class="nav-link">Home</a></li>
+                <li><a href="menu.html" class="nav-link">Menu</a></li>
+                <li><a href="reserve.html" class="nav-link">Book Table</a></li>
+                <li><a href="profile.html" class="nav-link">Profile</a></li>
+                <li><a href="login.html" class="nav-link">Login</a></li>
+            </ul>
+        </div>
+    </header>
+    <main>
+        <div class="container">
+            <div class="checkout-container">
+                <h2><i class="fa-solid fa-credit-card" style="color: var(--accent);"></i> Secure Checkout</h2>
+                <p style="color: var(--gray); margin-bottom: 2rem;">Confirm your order details and choose your payment method below.</p>
+
+                <!-- Order details -->
+                <div style="background-color: var(--cream); padding: 1.5rem; border-radius: 8px; border: 1px solid var(--cream-dark); margin-bottom: 2rem; text-align: left; max-width: 500px; margin-left: auto; margin-right: auto;">
+                    <h4 style="font-family: 'Outfit', sans-serif; border-bottom: 1px dashed var(--cream-dark); padding-bottom: 0.5rem; margin-bottom: 1rem; color: var(--primary);">Order Invoice Summary</h4>
+                    <p style="margin: 0.4rem 0;"><b>Order Reference:</b> KC-ORD-{{ order.id }}</p>
+                    <p style="margin: 0.4rem 0;"><b>Customer Name:</b> {{ order.customer_name }}</p>
+                    <p style="margin: 0.4rem 0;"><b>Phone Number:</b> {{ order.customer_phone }}</p>
+                    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--cream-dark); display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-weight: 700; font-size: 1.1rem;">Total Amount to Pay:</span>
+                        <span style="font-size: 1.8rem; font-weight: 800; color: var(--accent);">INR {{ "%.2f"|format(order.total_amount) }}</span>
+                    </div>
+                </div>
+
+                <!-- Razorpay Pay Button and Card -->
+                <div class="qr-card" style="max-width: 400px; margin: 0 auto 2rem auto; padding: 2rem 1.5rem;">
+                    <div style="font-weight: 600; text-transform: uppercase; color: var(--primary); font-size: 0.85rem; letter-spacing: 1px; margin-bottom: 1.5rem;">Pay securely using UPI, Cards, or Netbanking</div>
+
+                    <i class="fa-solid fa-shield-halved" style="font-size: 4rem; color: var(--accent); margin-bottom: 1.5rem; display: block;"></i>
+
+                    <button id="razorpay-pay-btn" data-order-id="{{ order.id }}" class="btn btn-accent" style="padding: 1.1rem 2rem; font-size: 1.1rem; width: 100%;">
+                        <i class="fa-solid fa-bolt"></i> Pay with Razorpay
+                    </button>
+
+                    <div style="margin-top: 1rem; font-size: 0.8rem; color: var(--gray);">
+                        <i class="fa-solid fa-lock"></i> Secured by 256-bit SSL Encryption
+                    </div>
+                </div>
+
+                <div style="margin-top: 1rem;">
+                    <a href="menu.html" style="color: var(--gray); font-size: 0.9rem; text-decoration: underline;"><i class="fa-solid fa-arrow-left-long"></i> Cancel & Return to Menu</a>
+                </div>
+            </div>
+        </div>
+    </main>
+    <!-- Load Razorpay Checkout SDK -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <!-- Custom Client-Side JS -->
+    <script src="js/main.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:fragment="layout(contentFragment)">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kushwaha Cafe - Premium Coffee & Cozy Space</title>
+    <!-- Favicon (Coffee emoji) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>☕</text></svg>">
+    <!-- FontAwesome Icons for visual enhancements -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom Style Sheet -->
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+    <!-- Premium Header / Navbar -->
+    <header>
+        <div class="container">
+            <a th:href="@{/}" class="logo">
+                <i class="fa-solid fa-mug-hot"></i> Kushwaha<span>Cafe</span>
+            </a>
+            
+            <ul class="nav-links">
+                <li><a th:href="@{/}" th:class="${currentURI == '/'} ? 'active'">Home</a></li>
+                <li><a th:href="@{/menu}" th:class="${currentURI == '/menu'} ? 'active'">Menu</a></li>
+                <li><a th:href="@{/reserve}" th:class="${currentURI == '/reserve'} ? 'active'">Book Table</a></li>
+                
+                <th:block th:if="${logged_in}">
+                    <li><a th:href="@{/profile}" th:class="${currentURI == '/profile'} ? 'active'"><i class="fa-solid fa-user-circle"></i> Profile</a></li>
+                    <th:block th:if="${user_role == 'admin'}">
+                        <li><a th:href="@{/admin}" class="btn btn-accent btn-sm" style="padding: 0.4rem 1rem;"><i class="fa-solid fa-gauge"></i> Admin Panel</a></li>
+                    </th:block>
+                    <li><a th:href="@{/logout}" class="btn btn-secondary btn-sm" style="padding: 0.4rem 1rem; border-color: #E2E8F0; color: #E2E8F0;"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
+                </th:block>
+                <th:block th:unless="${logged_in}">
+                    <li><a th:href="@{/login}" class="btn btn-accent"><i class="fa-solid fa-sign-in-alt"></i> Login</a></li>
+                </th:block>
+            </ul>
+        </div>
+    </header>
+
+    <!-- Flash Messages Container -->
+    <div class="flash-messages">
+        <th:block th:if="${flashMessage != null}">
+            <div th:class="'flash-message ' + ${flashCategory}">
+                <span>
+                    <i th:if="${flashCategory == 'success'}" class="fa-solid fa-circle-check"></i>
+                    <i th:if="${flashCategory == 'error'}" class="fa-solid fa-triangle-exclamation"></i>
+                    <i th:if="${flashCategory != 'success' && flashCategory != 'error'}" class="fa-solid fa-circle-info"></i>
+                    <span th:text="${flashMessage}"></span>
+                </span>
+                <button class="flash-close">&times;</button>
+            </div>
+        </th:block>
+    </div>
+
+    <!-- Main Content -->
+    <main th:replace="${contentFragment}">
+        <!-- Dynamic content goes here -->
+    </main>
+
+    <!-- Premium Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <h3><i class="fa-solid fa-mug-hot"></i> Kushwaha Cafe</h3>
+                    <p>Experience artisanal coffee brewed with passion, serving delicious gourmet snacks, and providing a cozy, premium workspace for developers, writers, and dreamers.</p>
+                </div>
+                <div class="footer-col">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a th:href="@{/}">Home</a></li>
+                        <li><a th:href="@{/menu}">Our Menu</a></li>
+                        <li><a th:href="@{/reserve}">Book a Table</a></li>
+                        <th:block th:unless="${logged_in}">
+                            <li><a th:href="@{/login}">Sign In / Register</a></li>
+                        </th:block>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h3>Opening Hours</h3>
+                    <p><b>Monday - Friday:</b> 8:00 AM - 10:00 PM</p>
+                    <p><b>Saturday - Sunday:</b> 9:00 AM - 11:00 PM</p>
+                    <p style="color: var(--accent); margin-top: 10px;"><b>Happy Hours:</b> Daily 4 PM - 6 PM (15% OFF)</p>
+                </div>
+                <div class="footer-col">
+                    <h3>Contact Us</h3>
+                    <th:block th:if="${not #lists.isEmpty(cafe_locations)}">
+                        <div th:each="loc : ${cafe_locations}" style="margin-bottom: 1.2rem;">
+                            <p style="font-weight: 600; margin-bottom: 3px; color: var(--accent);" th:text="${loc.name}"></p>
+                            <p style="margin-bottom: 3px; font-size: 0.85rem; line-height: 1.4;">
+                                <i class="fa-solid fa-location-dot" style="color: var(--accent);"></i> 
+                                <a th:href="${loc.mapUrl}" target="_blank" style="color: inherit; text-decoration: underline;" th:text="${loc.address}"></a>
+                            </p>
+                            <p th:if="${loc.phone}" style="margin-bottom: 0; font-size: 0.85rem;"><i class="fa-solid fa-phone" style="color: var(--accent);"></i> <span th:text="${loc.phone}"></span></p>
+                        </div>
+                    </th:block>
+                    <th:block th:if="${#lists.isEmpty(cafe_locations)}">
+                        <p><i class="fa-solid fa-location-dot" style="color: var(--accent);"></i> Sector-62, Noida, Uttar Pradesh, India</p>
+                        <p><i class="fa-solid fa-phone" style="color: var(--accent);"></i> +91 98765 43210</p>
+                        <p><i class="fa-solid fa-envelope" style="color: var(--accent);"></i> contact@kushwahacafe.com</p>
+                    </th:block>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Kushwaha Cafe. All Rights Reserved. Made with ❤️ using Spring Boot & Thymeleaf</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Custom Client-Side JS -->
+    <script th:src="@{/js/main.js}"></script>
+</body>
+</html>

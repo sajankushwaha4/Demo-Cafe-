@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{base :: layout(~{::main})}">
+<body>
+<main>
+<div class="container admin-container">
+    <div class="section-title" style="text-align: left; margin-bottom: 2rem;">
+        <h2>Admin Management Dashboard</h2>
+        <p style="color: var(--gray);">Control center for Kushwaha Cafe - manage bookings, orders, and food items.</p>
+    </div>
+    
+    <!-- Stats Row -->
+    <div class="admin-stats">
+        <div class="stat-card">
+            <h4>Total Revenue</h4>
+            <div class="stat-val" style="color: var(--success);" th:text="'INR ' + ${#numbers.formatDecimal(total_sales, 1, 2)}"></div>
+        </div>
+        <div class="stat-card">
+            <h4>Paid Orders</h4>
+            <div class="stat-val" th:text="${total_orders}"></div>
+        </div>
+        <div class="stat-card">
+            <h4>Table Bookings</h4>
+            <div class="stat-val" th:text="${total_bookings}"></div>
+        </div>
+    </div>
+    
+    <!-- Main Dashboard Panels -->
+    <div class="admin-sections">
+        
+        <!-- Left Panel: Bookings and Orders -->
+        <div style="display: flex; flex-direction: column; gap: 2.5rem;">
+            
+            <!-- Food Orders Panel -->
+            <div class="admin-card">
+                <h3><i class="fa-solid fa-cart-flatbed" style="color: var(--accent);"></i> Food Orders</h3>
+                <div class="admin-table-wrapper">
+                    <th:block th:if="${not #lists.isEmpty(orders_data)}">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Ref ID</th>
+                                    <th>Customer</th>
+                                    <th>Items Ordered</th>
+                                    <th>Total</th>
+                                    <th>Payment</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="data : ${orders_data}">
+                                    <td><b th:text="'KC-ORD-' + ${data.order.id}"></b></td>
+                                    <td>
+                                        <div th:text="${data.order.customerName}"></div>
+                                        <small style="color: var(--gray);" th:text="${data.order.customerPhone}"></small>
+                                    </td>
+                                    <td>
+                                        <ul style="padding-left: 1rem; font-size: 0.8rem;">
+                                            <li th:each="item : ${data.items_list}" th:text="${item.name} + ' x ' + ${item.quantity}"></li>
+                                        </ul>
+                                    </td>
+                                    <td><b th:text="'INR ' + ${#numbers.formatDecimal(data.order.totalAmount, 1, 2)}"></b></td>
+                                    <td>
+                                        <span th:class="'badge ' + (${data.order.paymentStatus == 'Paid'} ? 'paid' : 'pending')" th:text="${data.order.paymentStatus}"></span>
+                                    </td>
+                                    <td>
+                                        <span th:class="'badge ' + (${data.order.orderStatus == 'Completed'} ? 'completed' : 'pending')" th:text="${data.order.orderStatus}"></span>
+                                    </td>
+                                    <td>
+                                        <th:block th:if="${data.order.paymentStatus == 'Paid' && data.order.orderStatus != 'Completed'}">
+                                            <form th:action="@{/admin/order/status/{id}(id=${data.order.id})}" method="POST" class="status-form">
+                                                <select name="status" onchange="this.form.submit()">
+                                                    <option value="" disabled selected>Update Status</option>
+                                                    <option value="Preparing">Preparing</option>
+                                                    <option value="Completed">Completed</option>
+                                                </select>
+                                            </form>
+                                        </th:block>
+                                        <th:block th:unless="${data.order.paymentStatus == 'Paid' && data.order.orderStatus != 'Completed'}">
+                                            <span style="font-size: 0.8rem; color: var(--gray);">No action</span>
+                                        </th:block>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </th:block>
+                    <th:block th:if="${#lists.isEmpty(orders_data)}">
+                        <p style="color: var(--gray); font-style: italic; text-align: center; padding: 2rem;">No orders found in database.</p>
+                    </th:block>
+                </div>
+            </div>
+            
+            <!-- Table Bookings Panel -->
+            <div class="admin-card">
+                <h3><i class="fa-solid fa-calendar-check" style="color: var(--accent);"></i> Table Reservations</h3>
+                <div class="admin-table-wrapper">
+                    <th:block th:if="${not #lists.isEmpty(reservations)}">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Ref ID</th>
+                                    <th>Branch</th>
+                                    <th>Name</th>
+                                    <th>Email / Phone</th>
+                                    <th>Date</th>
+                                    <th>Slot In</th>
+                                    <th>Slot Out</th>
+                                    <th>Rate / Charge</th>
+                                    <th>Status</th>
+                                    <th>Guests</th>
+                                    <th>Special Request</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="res : ${reservations}">
+                                    <td th:text="'KC-RES-' + ${res.id}"></td>
+                                    <td><small style="font-weight: 600; color: var(--primary);" th:text="${res.location != null} ? ${res.location.name} : 'Kushwaha Cafe'"></small></td>
+                                    <td><b th:text="${res.name}"></b></td>
+                                    <td>
+                                        <div th:text="${res.email}"></div>
+                                        <small style="color: var(--gray);" th:text="${res.phone}"></small>
+                                    </td>
+                                    <td th:text="${res.date}"></td>
+                                    <td><b th:text="${res.slotIn}"></b></td>
+                                    <td><b th:text="${res.slotOut}"></b></td>
+                                    <td>
+                                        <div style="font-size: 0.75rem; color: var(--gray);" th:text="'Rate: ' + ${#numbers.formatDecimal(res.hourlyRate, 1, 2)} + '/hr'"></div>
+                                        <div style="font-weight: 700; color: var(--accent); margin-bottom: 0.3rem;" th:text="'INR ' + ${#numbers.formatDecimal(res.totalCharge, 1, 2)}"></div>
+                                        <!-- Manual Override Form -->
+                                        <form th:action="@{/admin/reservation/update-charge/{id}(id=${res.id})}" method="POST" style="display: flex; gap: 0.2rem; align-items: center;">
+                                            <input type="number" step="0.01" name="total_charge" th:value="${res.totalCharge}" style="width: 70px; padding: 0.2rem; font-size: 0.75rem; border: 1px solid var(--cream-dark); border-radius: 4px;" required>
+                                            <button type="submit" class="btn btn-secondary btn-sm" style="padding: 0.2rem 0.4rem; font-size: 0.7rem;" title="Override Charge"><i class="fa-solid fa-save"></i></button>
+                                        </form>
+                                    </td>
+                                    <td>
+                                        <span th:class="'badge ' + (${res.status == 'Active'} ? 'paid' : 'pending')" th:text="${res.status}"></span>
+                                    </td>
+                                    <td style="text-align: center;"><b th:text="${res.guests}"></b></td>
+                                    <td style="font-size: 0.8rem; max-width: 150px; white-space: normal;" th:text="${res.specialRequests != null && !res.specialRequests.isEmpty()} ? ${res.specialRequests} : '-'"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </th:block>
+                    <th:block th:if="${#lists.isEmpty(reservations)}">
+                        <p style="color: var(--gray); font-style: italic; text-align: center; padding: 2rem;">No table bookings found.</p>
+                    </th:block>
+                </div>
+            </div>
+            
+        </div>
+        
+        <!-- Right Panel: Menu Management -->
+        <div style="display: flex; flex-direction: column; gap: 2.5rem;">
+            
+            <!-- Add Menu Item Form -->
+            <div class="admin-card">
+                <h3><i class="fa-solid fa-plus-circle" style="color: var(--accent);"></i> Add Menu Item</h3>
+                <form th:action="@{/admin/menu/add}" method="POST">
+                    <div class="form-group">
+                        <label for="item-name">Item Name</label>
+                        <input type="text" id="item-name" name="name" placeholder="e.g. Mocha Latte" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="item-desc">Description</label>
+                        <textarea id="item-desc" name="description" rows="3" placeholder="Describe the food item..." required></textarea>
+                    </div>
+                    
+                    <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0px;">
+                        <div class="form-group" style="margin-bottom: 1.5rem;">
+                            <label for="item-price">Price (INR)</label>
+                            <input type="number" step="0.01" id="item-price" name="price" placeholder="Price" required>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 1.5rem;">
+                            <label for="item-cat">Category</label>
+                            <select id="item-cat" name="category" required>
+                                <option value="" disabled selected>Category</option>
+                                <option value="Hot Drinks">Hot Drinks</option>
+                                <option value="Cold Drinks">Cold Drinks</option>
+                                <option value="Snacks">Snacks</option>
+                                <option value="Pizza">Pizza</option>
+                                <option value="Burger">Burger</option>
+                                <option value="Desserts">Desserts</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="item-image">Image URL (Optional)</label>
+                        <input type="url" id="item-image" name="image_url" placeholder="https://unsplash.com/...">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-accent" style="width: 100%; margin-top: 1rem;"><i class="fa-solid fa-save"></i> Save Item</button>
+                </form>
+            </div>
+            
+            <!-- List/Delete Menu Items -->
+            <div class="admin-card">
+                <h3><i class="fa-solid fa-pencil" style="color: var(--accent);"></i> Menu Items List</h3>
+                <div class="admin-menu-list">
+                    <th:block th:if="${not #lists.isEmpty(menu_items)}">
+                        <div th:each="item : ${menu_items}" class="admin-menu-item" style="display: flex; justify-content: space-between; align-items: center; padding: 0.8rem 0; border-bottom: 1px solid var(--cream-dark);">
+                            <div class="admin-menu-item-info" style="display: flex; gap: 1rem; align-items: center;">
+                                <img th:src="${item.imageUrl}" class="admin-menu-thumb" alt="" style="width: 45px; height: 45px; border-radius: 6px; object-fit: cover;">
+                                <div>
+                                    <div style="font-weight: 600;" th:text="${item.name}"></div>
+                                    <small style="color: var(--gray);" th:text="${item.category}"></small>
+                                    
+                                    <!-- Inline Price Edit Form -->
+                                    <form th:action="@{/admin/menu/update-price/{id}(id=${item.id})}" method="POST" style="display: flex; gap: 0.3rem; align-items: center; margin-top: 0.3rem;">
+                                        <span style="font-size: 0.8rem; color: var(--gray);">INR </span>
+                                        <input type="number" step="0.01" name="price" th:value="${item.price}" style="width: 75px; padding: 0.2rem; font-size: 0.85rem; border: 1px solid var(--cream-dark); border-radius: 4px; background: #fff;" required>
+                                        <button type="submit" class="btn btn-secondary btn-sm" style="padding: 0.2rem 0.4rem; font-size: 0.75rem;" title="Save Price"><i class="fa-solid fa-check"></i></button>
+                                    </form>
+                                </div>
+                            </div>
+                            <form th:action="@{/admin/menu/delete/{id}(id=${item.id})}" method="POST" onsubmit="return confirm('Are you sure you want to delete this menu item?')">
+                                <button type="submit" class="qty-btn" style="color: var(--danger); font-size: 1rem; border-color: rgba(229, 62, 62, 0.3); background: none; cursor: pointer; padding: 0.3rem;" title="Delete Item">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </th:block>
+                    <th:block th:if="${#lists.isEmpty(menu_items)}">
+                        <p style="color: var(--gray); font-style: italic;">No items in menu.</p>
+                    </th:block>
+                </div>
+            </div>
+
+            <!-- Add Cafe Location Form -->
+            <div class="admin-card" style="margin-top: 2.5rem;">
+                <h3><i class="fa-solid fa-map-pin" style="color: var(--accent);"></i> Add Cafe Location</h3>
+                <form th:action="@{/admin/location/add}" method="POST">
+                    <div class="form-group">
+                        <label for="loc-name">Location/Branch Name</label>
+                        <input type="text" id="loc-name" name="name" placeholder="e.g. Kushwaha Cafe - Gorakhpur Branch" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="loc-address">Address</label>
+                        <input type="text" id="loc-address" name="address" placeholder="e.g. Near Station Road, Gorakhpur" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="loc-map">Google Maps / Navigation URL</label>
+                        <input type="url" id="loc-map" name="map_url" placeholder="https://maps.app.goo.gl/..." required>
+                        <small style="color: var(--gray); font-size: 0.75rem;">Link to the Google Maps navigation/directions page.</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="loc-phone">Phone Number (Optional)</label>
+                        <input type="text" id="loc-phone" name="phone" placeholder="e.g. +91 74084 33563">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="loc-rate">Hourly Table Booking Rate (INR)</label>
+                        <input type="number" step="0.01" id="loc-rate" name="hourly_rate" placeholder="e.g. 100.00" value="100.00" required>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-accent" style="width: 100%; margin-top: 1rem;"><i class="fa-solid fa-save"></i> Save Location</button>
+                </form>
+            </div>
+            
+            <!-- List/Delete Cafe Locations -->
+            <div class="admin-card" style="margin-top: 2.5rem;">
+                <h3><i class="fa-solid fa-map-location-dot" style="color: var(--accent);"></i> Cafe Locations List</h3>
+                <div class="admin-menu-list">
+                    <th:block th:if="${not #lists.isEmpty(cafe_locations)}">
+                        <div th:each="loc : ${cafe_locations}" class="admin-menu-item" style="align-items: flex-start; padding: 1rem 0;">
+                            <div style="flex-grow: 1; padding-right: 1rem;">
+                                <div style="font-weight: 600; font-size: 1rem; color: var(--primary);" th:text="${loc.name}"></div>
+                                <div style="font-size: 0.85rem; color: var(--gray); margin: 0.2rem 0;"><i class="fa-solid fa-location-dot"></i> <span th:text="${loc.address}"></span></div>
+                                <div th:if="${loc.phone}" style="font-size: 0.85rem; color: var(--gray);"><i class="fa-solid fa-phone"></i> <span th:text="${loc.phone}"></span></div>
+                                <div style="font-size: 0.85rem; color: var(--dark); margin: 0.2rem 0;"><i class="fa-solid fa-indian-rupee-sign"></i> Hourly Booking Rate: <b th:text="'INR ' + ${#numbers.formatDecimal(loc.hourlyRate, 1, 2)}"></b></div>
+                                <div style="margin-top: 0.4rem;">
+                                    <a th:href="${loc.mapUrl}" target="_blank" style="font-size: 0.8rem; color: var(--accent); text-decoration: underline;"><i class="fa-solid fa-up-right-from-square"></i> Open Map Directions</a>
+                                </div>
+                                <form th:action="@{/admin/location/update-rate/{id}(id=${loc.id})}" method="POST" style="margin-top: 0.6rem; display: flex; gap: 0.5rem; align-items: center;">
+                                    <input type="number" step="0.01" name="hourly_rate" th:value="${loc.hourlyRate}" style="width: 80px; padding: 0.3rem; font-size: 0.85rem; border: 1px solid var(--cream-dark); border-radius: 4px;" required>
+                                    <button type="submit" class="btn btn-secondary btn-sm" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;"><i class="fa-solid fa-save"></i> Update Rate</button>
+                                </form>
+                            </div>
+                            <form th:action="@{/admin/location/delete/{id}(id=${loc.id})}" method="POST" onsubmit="return confirm('Are you sure you want to delete this location?')">
+                                <button type="submit" class="qty-btn" style="color: var(--danger); font-size: 1rem; border-color: rgba(229, 62, 62, 0.3);" title="Delete Location">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </th:block>
+                    <th:block th:if="${#lists.isEmpty(cafe_locations)}">
+                        <p style="color: var(--gray); font-style: italic;">No cafe locations registered in database.</p>
+                    </th:block>
+                </div>
+            </div>
+            
+        </div>
+        
+    </div>
+</div>
+</main>
+</body>
+</html>

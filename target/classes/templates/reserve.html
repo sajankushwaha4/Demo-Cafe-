@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" th:replace="~{base :: layout(~{::main})}">
+<body>
+<main>
+<div class="container">
+    <div class="reserve-container">
+        <h2><i class="fa-solid fa-chair" style="color: var(--accent);"></i> Book a Table</h2>
+        <p class="text-center" style="color: var(--gray); margin-top: -1.5rem; margin-bottom: 2rem;">Secure your spot at Kushwaha Cafe. We will email your confirmation code to you instantly.</p>
+        
+        <!-- Branch Rates Banner -->
+        <div style="background: rgba(212, 175, 55, 0.05); border: 1.5px dashed var(--accent); border-radius: 8px; padding: 1rem; margin-bottom: 2.5rem; text-align: center;">
+            <span style="font-weight: 600; color: var(--primary); font-size: 0.95rem; display: block; margin-bottom: 0.5rem;"><i class="fa-solid fa-tags" style="color: var(--accent);"></i> Table Booking Hourly Charges:</span>
+            <div style="display: flex; gap: 1.5rem; justify-content: center; flex-wrap: wrap; font-size: 0.9rem;">
+                <div th:each="loc : ${cafe_locations}" style="background: white; padding: 0.4rem 0.8rem; border-radius: 4px; border: 1px solid var(--cream-dark); box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                    📍 <b th:text="${#strings.contains(loc.name, ' - ')} ? ${#strings.arraySplit(loc.name, ' - ')[1]} : ${loc.name}"></b>: 
+                    <span style="color: var(--accent); font-weight: 700;" th:text="'INR ' + ${#numbers.formatDecimal(loc.hourlyRate, 1, 2)} + ' / hr'"></span>
+                </div>
+            </div>
+        </div>
+        
+        <form th:action="@{/reserve}" method="POST">
+            <div class="form-grid">
+                <!-- Name Field -->
+                <div class="form-group">
+                    <label for="res-name"><i class="fa-solid fa-user"></i> Full Name</label>
+                    <input type="text" id="res-name" name="name" th:value="${username}" placeholder="Enter booking name" required>
+                </div>
+                
+                <!-- Email Field -->
+                <div class="form-group">
+                    <label for="res-email"><i class="fa-solid fa-envelope"></i> Email Address</label>
+                    <input type="email" id="res-email" name="email" th:value="${user_email}" placeholder="Enter email address" required>
+                    <small style="color: var(--gray); font-size: 0.75rem;">Your booking receipt will be sent here.</small>
+                </div>
+                
+                <!-- Phone Field -->
+                <div class="form-group">
+                    <label for="res-phone"><i class="fa-solid fa-phone"></i> Phone Number</label>
+                    <input type="tel" id="res-phone" name="phone" placeholder="Enter contact phone" required>
+                </div>
+                
+                <!-- Location Field -->
+                <div class="form-group">
+                    <label for="res-location"><i class="fa-solid fa-location-dot"></i> Cafe Branch Location</label>
+                    <select id="res-location" name="location_id" required>
+                        <option value="" disabled selected>Select a branch...</option>
+                        <option th:each="loc : ${cafe_locations}" th:value="${loc.id}" th:data-rate="${loc.hourlyRate}" th:text="${loc.name} + ' (INR ' + ${#numbers.formatDecimal(loc.hourlyRate, 1, 2)} + '/hr)'"></option>
+                    </select>
+                </div>
+
+                <!-- Guest Count Field -->
+                <div class="form-group">
+                    <label for="res-guests"><i class="fa-solid fa-users"></i> Number of Guests</label>
+                    <select id="res-guests" name="guests" required>
+                        <option value="" disabled selected>Select number of guests</option>
+                        <option value="1">1 Person</option>
+                        <option value="2">2 Persons</option>
+                        <option value="3">3 Persons</option>
+                        <option value="4">4 Persons</option>
+                        <option value="5">5 Persons</option>
+                        <option value="6">6 Persons</option>
+                        <option value="8">8 Persons</option>
+                        <option value="10">10+ Persons (Party)</option>
+                    </select>
+                </div>
+                
+                <!-- Date Field -->
+                <div class="form-group">
+                    <label for="res-date"><i class="fa-solid fa-calendar"></i> Date</label>
+                    <input type="date" id="res-date" name="date" required>
+                </div>
+                
+                <!-- Slot In Time Field -->
+                <div class="form-group">
+                    <label for="res-slot-in"><i class="fa-solid fa-clock"></i> Slot In Time</label>
+                    <input type="time" id="res-slot-in" name="slot_in" required>
+                </div>
+                
+                <!-- Slot Out Time Field -->
+                <div class="form-group">
+                    <label for="res-slot-out"><i class="fa-solid fa-clock-outline"></i> Slot Out Time</label>
+                    <input type="time" id="res-slot-out" name="slot_out" required>
+                    <div id="duration-warning" style="display: none; color: #e53e3e; font-size: 0.8rem; margin-top: 0.4rem; font-weight: 500;">
+                        <i class="fa-solid fa-circle-exclamation"></i> You cannot book less than 1 hours.
+                    </div>
+                </div>
+                
+                <!-- Special Requests Field -->
+                <div class="form-group full-width">
+                    <label for="res-requests"><i class="fa-solid fa-pen-nib"></i> Special Requests (Optional)</label>
+                    <textarea id="res-requests" name="special_requests" rows="4" placeholder="Let us know if you need high chairs, have food allergies, or are celebrating a special occasion..."></textarea>
+                </div>
+            </div>
+            
+            <!-- Dynamic Booking Cost Card -->
+            <div id="booking-cost-card" style="display: none; background: rgba(212, 175, 55, 0.08); border: 1.5px solid var(--accent); padding: 1.5rem; border-radius: 8px; margin: 2rem 0; text-align: left; animation: fadeIn 0.4s ease;">
+                <h4 style="color: var(--primary); margin: 0 0 0.8rem 0; display: flex; align-items: center; gap: 0.5rem; font-family: 'Outfit', sans-serif;">
+                    <i class="fa-solid fa-calculator" style="color: var(--accent);"></i> Booking Cost Estimation
+                </h4>
+                <div style="font-size: 0.95rem; color: var(--dark); line-height: 1.6;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.3rem;">
+                        <span>Selected Branch:</span>
+                        <b id="cost-branch" style="color: var(--primary);">-</b>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.3rem;">
+                        <span>Hourly Rate:</span>
+                        <b>INR <span id="cost-rate">0.00</span> / hour</b>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.3rem;">
+                        <span>Estimated Duration:</span>
+                        <b id="cost-duration">0.0 hours</b>
+                    </div>
+                    <hr style="border: 0; border-top: 1px dashed rgba(42, 26, 16, 0.2); margin: 0.8rem 0;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 1.1rem; font-weight: 600; color: var(--primary);">Total Table Booking Charge:</span>
+                        <span style="font-size: 1.25rem; font-weight: 700; color: var(--accent);">INR <span id="cost-total">0.00</span></span>
+                    </div>
+                    <div id="cost-message" style="margin-top: 1rem; padding: 0.8rem; background: rgba(212, 175, 55, 0.08); border-left: 4px solid var(--accent); border-radius: 4px; font-size: 0.9rem; font-weight: 500; color: var(--primary); line-height: 1.4;">
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center" style="margin-top: 2rem;">
+                <button type="submit" class="btn btn-accent" style="padding: 1rem 3rem;"><i class="fa-solid fa-circle-check"></i> Confirm Reservation</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Set minimum date picker values to today
+        const dateInput = document.getElementById('res-date');
+        if (dateInput) {
+            const today = new Date().toISOString().split('T')[0];
+            dateInput.min = today;
+            dateInput.value = today;
+        }
+        
+        // Dynamic time validation & Cost Calculation
+        const locationSelect = document.getElementById('res-location');
+        const slotIn = document.getElementById('res-slot-in');
+        const slotOut = document.getElementById('res-slot-out');
+        const form = document.querySelector('form');
+        
+        const costCard = document.getElementById('booking-cost-card');
+        const costBranch = document.getElementById('cost-branch');
+        const costRate = document.getElementById('cost-rate');
+        const costDuration = document.getElementById('cost-duration');
+        const costTotal = document.getElementById('cost-total');
+        const costMessage = document.getElementById('cost-message');
+        const durationWarning = document.getElementById('duration-warning');
+        
+        function validateTimesAndCalcCost() {
+            let isValid = true;
+            let showWarning = false;
+            
+            const selectedOpt = locationSelect.options[locationSelect.selectedIndex];
+            
+            if (slotIn.value && slotOut.value) {
+                const [inH, inM] = slotIn.value.split(':').map(Number);
+                const [outH, outM] = slotOut.value.split(':').map(Number);
+                
+                const timeInMin = inH * 60 + inM;
+                const timeOutMin = outH * 60 + outM;
+                
+                if (timeInMin >= timeOutMin) {
+                    slotOut.setCustomValidity("Slot Out time must be after Slot In time.");
+                    isValid = false;
+                } else if (timeOutMin - timeInMin < 60) {
+                    slotOut.setCustomValidity("You cannot book less than 1 hours.");
+                    isValid = false;
+                    showWarning = true;
+                } else {
+                    slotOut.setCustomValidity("");
+                }
+            } else {
+                isValid = false;
+            }
+            
+            // Toggle inline warning message
+            if (showWarning) {
+                durationWarning.style.display = "block";
+            } else {
+                durationWarning.style.display = "none";
+            }
+            
+            // Calculate Cost
+            if (!selectedOpt || locationSelect.value === "" || !isValid) {
+                costCard.style.display = "none";
+                return;
+            }
+            
+            const rate = parseFloat(selectedOpt.getAttribute('data-rate')) || 0;
+            const branchName = selectedOpt.text.split(' (')[0];
+            
+            const [inH, inM] = slotIn.value.split(':').map(Number);
+            const [outH, outM] = slotOut.value.split(':').map(Number);
+            
+            const timeInMin = inH * 60 + inM;
+            const timeOutMin = outH * 60 + outM;
+            
+            if (timeOutMin > timeInMin) {
+                const durationHrs = (timeOutMin - timeInMin) / 60.0;
+                const totalCost = durationHrs * rate;
+                
+                costBranch.textContent = branchName;
+                costRate.textContent = rate.toFixed(2);
+                costDuration.textContent = durationHrs.toFixed(1) + " hours";
+                costTotal.textContent = totalCost.toFixed(2);
+                
+                // Show dynamic confirmation sentence
+                costMessage.innerHTML = `<i class="fa-solid fa-circle-info"></i> You are booking a table for <b>${durationHrs.toFixed(1)} hours</b> at ${branchName}. Your total table charge will be <b style="color: var(--accent);">INR ${totalCost.toFixed(2)}</b>.`;
+                
+                costCard.style.display = "block";
+            } else {
+                costCard.style.display = "none";
+            }
+        }
+        
+        locationSelect.addEventListener('change', validateTimesAndCalcCost);
+        slotIn.addEventListener('change', validateTimesAndCalcCost);
+        slotOut.addEventListener('change', validateTimesAndCalcCost);
+        
+        form.addEventListener('submit', (e) => {
+            validateTimesAndCalcCost();
+            if (!form.checkValidity()) {
+                e.preventDefault();
+            }
+        });
+    });
+</script>
+</main>
+</body>
+</html>
